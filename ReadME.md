@@ -89,34 +89,48 @@ To get PyPass running on your local machine, follow these simple steps:
 ---
 
 ## Containerization
-* This application is also containerized for ease of use and testing on your local machine! Which makes it easier for the user to tear up or down the application without having to manually uninstall all the dependencies / packages in the event you want to remove the application
 
-* **Steps to Build and Run**
-    1. Go to the current working directory of the repository aka. pypass/
-      ```bash
+This application is also containerized for ease of use and testing on your local machine! This makes it easier to tear down or spin up the application without manually uninstalling dependencies if you want to remove it later.
 
-      git clone https://github.com/CyberPanther232/pypass.git; cd pypass
+---
 
-      ```
-    3. Next, run the command below to build the container on your machine!
-      ```bash
-       # Without elevated privileges
-        sudo docker build -t "pypass" ./
+### **Steps to Build and Run**
 
-       # With elevated privileges
-        sudo docker build -t "pypass" ./
-       
-      ```
+1. Clone the repository and navigate to the `pypass/` directory:
 
-    5. After that, run the command below (set the left port to whatever port you want to open on your machine)
-     ```bash
-         # This will start and run the container detached
-        docker run -p 5000:5000 --name PYPASS -d
-     ```
+    ```bash
+    git clone https://github.com/CyberPanther232/pypass.git
+    cd pypass
+    ```
 
-     4. Finally, go to a web browser and either type localhost:5000 (or whatever other port number you may use) or the local IP address associated with your machine ex. (192.168.1.2:5000)
- 
-     5. Then you're done! Enjoy! 
+2. Build the Docker container:
+
+    ```bash
+    # Without elevated privileges
+    docker build -t "pypass" ./
+
+    # Or with sudo, if required
+    sudo docker build -t "pypass" ./
+    ```
+
+3. Run the container (you can change the left port if needed):
+
+    ```bash
+    docker run -p 5000:5000 --name PYPASS -d pypass
+    ```
+
+4. Open your browser and navigate to:
+
+    ```
+    http://localhost:5000
+    ```
+
+    Or use your local IP address (e.g., `http://192.168.1.2:5000`).
+
+---
+
+✅ You're done — enjoy using PyPass!
+
 
 ## 🤝 Contributing
 
