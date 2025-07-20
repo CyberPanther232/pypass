@@ -1,3 +1,1 @@
-<p align="center">
-  <img src="https://github.com/CyberPanther232/pypass/blob/master/pypass_logo_mini.png" alt="Description" width="300"/>
-</p>
+![Logo](https://github.com/CyberPanther232/wordle_ML/blob/749a3244b93771665c14220191010e916c9e88cb/Wordle_ML_logo_mini.png)
