@@ -1,6 +1,8 @@
 from app import application
 from flask import render_template, request, flash, redirect
 import secrets
+import requests
+import hashlib
 import string
 
 def generate_random_password(length, upper, lower, numbers, symbols):
@@ -20,6 +22,24 @@ def generate_random_password(length, upper, lower, numbers, symbols):
     
     return "".join(secrets.choice(valid_characters) for i in range(0, length + 1))
 
+def check_online(password):
+    try:
+        times_seen = 0
+
+        hash_string = hashlib.sha1(password.encode()).hexdigest()
+        
+        prefix = hash_string[0:5]
+        suffix = hash_string[5:0]
+        req = requests.get(f'https://api.pwnedpasswords.com/range/{prefix}')
+        
+        hashes = (line.split(":") for line in req.text.splitlines())
+        for hash_suffix, count in hashes:
+            if hash_suffix == suffix:
+                return int(count)  # Found, return number of times seen
+        return 0
+    except Exception as e:
+        print(f"Error: {e}")
+        return False
 
 @application.route("/", methods=["GET"])
 def index():
@@ -103,3 +123,23 @@ def check_strength():
     
     else:
         return redirect("/")
+    
+@application.route("/check-breach", methods=["GET", "POST"])
+def check_breach():
+    
+    if request.method == "POST":
+        password = request.form.get("password_to_check_breach")
+        occurances = check_online(password)
+        
+        if not occurances.is_integer():
+            breach_feedback = "Error!"
+        else:
+            if occurances > 1:
+                breach_feedback = f"Oh no... That password has been found and cracked in approximately {occurances} data breaches!"
+            else:
+                breach_feedback = "Phew... This password has not been found in most common breaches"
+    
+        return render_template("index.html", breach_feedback=breach_feedback)
+    
+    else:
+        return redirect("/")    

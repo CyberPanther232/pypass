@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Password Toolkit</title>
+    <title>PyPass Toolkit</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -25,6 +25,15 @@
         .strength-bar-transition {
             transition: width 0.3s ease-in-out, background-color 0.3s ease-in-out;
         }
+
+        /* Simple animation for the copy notification */
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0; transform: translateY(10px); }
+            10%, 90% { opacity: 1; transform: translateY(0); }
+        }
+        .toast-notification {
+            animation: fadeInOut 3s ease-in-out forwards;
+        }
     </style>
 </head>
 <body class="bg-slate-900 text-slate-300 flex items-center justify-center min-h-screen p-4">
@@ -32,117 +41,161 @@
     <div class="w-full max-w-md mx-auto">
         <header class="text-center mb-8">
             <h1 class="text-4xl font-bold text-white">PyPass</h1>
-            <p class="text-slate-400 mt-2">Generate and check the strength of your passwords.</p>
+            <p class="text-slate-400 mt-2">Generate, check strength, and verify security.</p>
         </header>
 
         <main class="space-y-8">
             <!-- Password Generator Section -->
-            <!-- This form would submit to your Flask endpoint for generating a password -->
             <form id="passwordGenerateForm" method="POST" action="/generate-password" class="bg-slate-800 p-6 rounded-2xl shadow-lg">
                 <h2 class="text-xl font-semibold text-white mb-4">Password Generator</h2>
                 
-                <!-- Generated Password Display -->
                 <div class="relative flex items-center bg-slate-900 rounded-lg p-3 mb-4">
                     <input id="generated-password" type="text" readonly placeholder="Your generated password will appear here" value="{{ generated_password or '' }}" class="w-full bg-transparent text-white text-lg placeholder-slate-500 border-none focus:ring-0">
-                    <button type="button" onclick="copyToClipboard()" title="Copy to clipboard" class="p-2 rounded-md hover:bg-slate-700 transition-colors">
+                    <button id="copy-button" type="button" title="Copy to clipboard" class="p-2 rounded-md hover:bg-slate-700 transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                     </button>
-                    <script>
-                        function copyToClipboard() {
-                            // Get the text field
-                            var text = document.getElementById("generated-password");
-
-                            // Select field
-                            text.select();
-                            text.setSelectionRange(0, 33);
-
-                            navigator.clipboard.writeText(text.value);
-
-                            alert("Password copied to clipboard!");
-                        };
-                    </script>
-
                 </div>
 
-                <!-- Generator Options -->
                 <div class="space-y-4">
-                    <!-- Password Length -->
                     <div class="flex items-center justify-between">
                         <label for="length" class="text-slate-300">Password Length</label>
-                        <!-- You can update this span with JS if you want a live counter -->
                         <span id="length-value" class="text-white font-semibold text-lg">16</span>
                     </div>
                     <input id="length" name="length" type="range" min="8" max="32" value="16" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-sky-500">
-                    <script>
-                        document.getElementById("length").addEventListener('input', function() {
-                            document.getElementById('length-value').textContent = this.value;
-                        });
-                    </script>
-
-                    <!-- Character Type Checkboxes -->
+                    
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="flex items-center">
-                            <input id="uppercase" name="uppercase" type="checkbox" class="h-5 w-5 bg-slate-700 border-slate-600 text-sky-500 focus:ring-sky-600 rounded">
+                            <input id="uppercase" name="uppercase" type="checkbox" checked class="h-5 w-5 bg-slate-700 border-slate-600 text-sky-500 focus:ring-sky-600 rounded">
                             <label for="uppercase" class="ml-3 text-slate-300">Include Uppercase</label>
                         </div>
                         <div class="flex items-center">
-                            <input id="lowercase" name="lowercase" type="checkbox" class="h-5 w-5 bg-slate-700 border-slate-600 text-sky-500 focus:ring-sky-600 rounded">
+                            <input id="lowercase" name="lowercase" type="checkbox" checked class="h-5 w-5 bg-slate-700 border-slate-600 text-sky-500 focus:ring-sky-600 rounded">
                             <label for="lowercase" class="ml-3 text-slate-300">Include Lowercase</label>
                         </div>
                         <div class="flex items-center">
-                            <input id="numbers" name="numbers" type="checkbox" class="h-5 w-5 bg-slate-700 border-slate-600 text-sky-500 focus:ring-sky-600 rounded">
+                            <input id="numbers" name="numbers" type="checkbox" checked class="h-5 w-5 bg-slate-700 border-slate-600 text-sky-500 focus:ring-sky-600 rounded">
                             <label for="numbers" class="ml-3 text-slate-300">Include Numbers</label>
                         </div>
                         <div class="flex items-center">
-                            <input id="symbols" name="symbols" type="checkbox" class="h-5 w-5 bg-slate-700 border-slate-600 text-sky-500 focus:ring-sky-600 rounded">
+                            <input id="symbols" name="symbols" type="checkbox" checked class="h-5 w-5 bg-slate-700 border-slate-600 text-sky-500 focus:ring-sky-600 rounded">
                             <label for="symbols" class="ml-3 text-slate-300">Include Symbols</label>
                         </div>
                     </div>
                 </div>
 
-                <!-- Generate Button -->
                 <button type="submit" class="mt-6 w-full bg-sky-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 focus:ring-sky-500 transition-all duration-300 transform hover:scale-105">
                     Generate Password
                 </button>
-                <script>
-                    document.getElementById('passwordGenerateForm').addEventListener('submit', function (e) {
-                        const checkboxes = ['uppercase', 'lowercase', 'numbers', 'symbols'];
-                        const oneChecked = checkboxes.some(id => document.getElementById(id).checked);
-
-                        if (!oneChecked) {
-                            e.preventDefault(); // Stop form from submitting
-                            alert('Please select at least one character type (uppercase, lowercase, numbers, or symbols).');
-                        }
-                    });
-                </script>
             </form>
 
             <!-- Password Strength Checker Section -->
-            <!-- This could be a separate form or handled with AJAX/Fetch -->
             <form method="POST" action="/check-strength" class="bg-slate-800 p-6 rounded-2xl shadow-lg">
                 <h2 class="text-xl font-semibold text-white mb-4">Password Strength Checker</h2>
                 
-                <!-- Password Input -->
-                <input id="password-to-check" name="password_to_check" type="text" value="{{ password or "Enter password here" }}" placeholder="Type a password and submit to check" class="w-full bg-slate-900 text-white placeholder-slate-500 border border-slate-700 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition">
+                <input id="password-to-check" name="password_to_check" type="text" value="{{ password_to_check or '' }}" placeholder="Type a password to check its strength" class="w-full bg-slate-900 text-white placeholder-slate-500 border border-slate-700 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition">
 
-                <!-- Strength Bar and Feedback -->
                 <div class="mt-4">
                     <div class="w-full bg-slate-700 rounded-full h-2.5">
-                        <!-- Your Flask app would pass data to set the width and color here -->
-                        <!-- Example: style="width: {{ strength_percent }}%;" class="... {{ strength_color_class }}" -->
-                        <div id="strength-bar" class="h-2.5 rounded-full strength-bar-transition {{ strength_bar_color }}" style="width: {{ strength_bar_value or 0 }}%"></div>
-
+                         <div id="strength-bar" class="h-2.5 rounded-full strength-bar-transition {{ strength_bar_color or 'bg-slate-700' }}" style="width: {{ strength_bar_value or 0 }}%"></div>
                     </div>
-                     <!-- Your Flask app would pass the feedback text here -->
-                    <p id="strength_feedback" class="text-right text-sm mt-2 font-medium text-slate-400">{{ strength_feedback or 'Please enter password above' }}</p>
+                    <p id="strength-feedback" class="text-right text-sm mt-2 font-medium {{ strength_feedback_color or 'text-slate-400' }}">{{ strength_feedback or 'Please enter a password above' }}</p>
                 </div>
                  <button type="submit" class="mt-6 w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 focus:ring-indigo-500 transition-all">
                     Check Strength
                 </button>
             </form>
+            
+            <!-- Common Password / Breach Check Section -->
+            <form method="POST" action="/check-breach" class="bg-slate-800 p-6 rounded-2xl shadow-lg">
+                <h2 class="text-xl font-semibold text-white mb-4">Common Password Check</h2>
+                
+                <!-- Using type="password" is better for privacy -->
+                <input id="password-to-check-breach" name="password_to_check_breach" type="password" placeholder="Enter password to check for breaches" class="w-full bg-slate-900 text-white placeholder-slate-500 border border-slate-700 rounded-lg p-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition">
+
+                <!-- Result from your Flask backend will be displayed here -->
+                <div class="mt-4 text-center h-12 flex items-center justify-center">
+                    {% if breach_feedback %}
+                        <p class="font-medium {{ breach_feedback_color or 'text-slate-400' }}">{{ breach_feedback | safe }}</p>
+                    {% endif %}
+                </div>
+
+                 <button type="submit" class="mt-2 w-full bg-teal-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 focus:ring-teal-500 transition-all">
+                    Check for Breaches
+                </button>
+            </form>
         </main>
         
+        <!-- Floating Notification for Copy Action -->
+        <div id="toast" class="hidden fixed bottom-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-xl">
+            Copied to clipboard!
+        </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Element References ---
+            const lengthSlider = document.getElementById('length');
+            const lengthValue = document.getElementById('length-value');
+            const copyButton = document.getElementById('copy-button');
+            const passwordGenerateForm = document.getElementById('passwordGenerateForm');
+            const toast = document.getElementById('toast');
+
+            // --- Event Listeners ---
+
+            // Update password length display
+            if (lengthSlider) {
+                lengthSlider.addEventListener('input', function() {
+                    if (lengthValue) {
+                        lengthValue.textContent = this.value;
+                    }
+                });
+            }
+
+            // Copy to clipboard functionality
+            if (copyButton) {
+                copyButton.addEventListener('click', () => {
+                    const passwordField = document.getElementById('generated-password');
+                    const password = passwordField.value;
+
+                    if (!password) return;
+
+                    // Use the Clipboard API for modern browsers
+                    navigator.clipboard.writeText(password).then(() => {
+                        showToast();
+                    }).catch(err => {
+                        console.error('Could not copy text: ', err);
+                    });
+                });
+            }
+
+            // Form validation: ensure at least one character type is selected
+            if (passwordGenerateForm) {
+                passwordGenerateForm.addEventListener('submit', function (e) {
+                    const checkboxes = ['uppercase', 'lowercase', 'numbers', 'symbols'];
+                    const isAnyChecked = checkboxes.some(id => document.getElementById(id) && document.getElementById(id).checked);
+
+                    if (!isAnyChecked) {
+                        e.preventDefault(); // Stop form submission
+                        // A non-blocking notification is better than alert()
+                        alert('Please select at least one character type.');
+                    }
+                });
+            }
+
+            // --- Helper Functions ---
+
+            // Show a "Copied!" toast notification
+            function showToast() {
+                if (!toast) return;
+                toast.classList.remove('hidden');
+                toast.classList.add('toast-notification');
+                setTimeout(() => {
+                    toast.classList.add('hidden');
+                    toast.classList.remove('toast-notification');
+                }, 3000);
+            }
+        });
+    </script>
 
 </body>
 </html>
