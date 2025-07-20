@@ -94,18 +94,21 @@ To get PyPass running on your local machine, follow these simple steps:
 * **Steps to Build and Run**
     1. Go to the current working directory of the repository aka. pypass/
       ```bash
-        git clone https://github.com/CyberPanther232/pypass.git; cd pypass
+
+      git clone https://github.com/CyberPanther232/pypass.git; cd pypass
+
       ```
-    2. Next, run the command below to build the container on your machine!
+    3. Next, run the command below to build the container on your machine!
       ```bash
        # Without elevated privileges
         sudo docker build -t "pypass" ./
 
        # With elevated privileges
         sudo docker build -t "pypass" ./
+       
       ```
 
-    3. After that, run the command below (set the left port to whatever port you want to open on your machine)
+    5. After that, run the command below (set the left port to whatever port you want to open on your machine)
      ```bash
          # This will start and run the container detached
         docker run -p 5000:5000 --name PYPASS -d
