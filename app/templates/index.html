@@ -51,33 +51,47 @@
                 
                 <div class="relative flex items-center bg-slate-900 rounded-lg p-3 mb-4">
                     <input id="generated-password" type="text" readonly placeholder="Your generated password will appear here" value="{{ generated_password or '' }}" class="w-full bg-transparent text-white text-lg placeholder-slate-500 border-none focus:ring-0">
-                    <button id="copy-button" type="button" title="Copy to clipboard" class="p-2 rounded-md hover:bg-slate-700 transition-colors">
+                    <button type="button" onclick="copyToClipboard()" title="Copy to clipboard" class="p-2 rounded-md hover:bg-slate-700 transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                     </button>
+                    <script>
+                        function copyToClipboard() {
+                            var text = document.getElementById("generated-password");
+                            text.select();
+                            text.setSelectionRange(0, 99999); // For mobile devices
+                            navigator.clipboard.writeText(text.value);
+                            alert("Password copied to clipboard!");
+                        };
+                    </script>
                 </div>
 
                 <div class="space-y-4">
                     <div class="flex items-center justify-between">
                         <label for="length" class="text-slate-300">Password Length</label>
-                        <span id="length-value" class="text-white font-semibold text-lg">16</span>
+                        <span id="length-value" class="text-white font-semibold text-lg">{{ length or 16 }}</span>
                     </div>
-                    <input id="length" name="length" type="range" min="8" max="32" value="16" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-sky-500">
+                    <input id="length" name="length" type="range" min="8" max="32" value="{{ length or 16 }}" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-sky-500">
+                    <script>
+                        document.getElementById("length").addEventListener('input', function() {
+                            document.getElementById('length-value').textContent = this.value;
+                        });
+                    </script>
                     
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="flex items-center">
-                            <input id="uppercase" name="uppercase" type="checkbox" checked class="h-5 w-5 bg-slate-700 border-slate-600 text-sky-500 focus:ring-sky-600 rounded">
+                            <input id="uppercase" name="uppercase" type="checkbox" value="1" {% if upper %}checked{% endif %} class="h-5 w-5 bg-slate-700 border-slate-600 text-sky-500 focus:ring-sky-600 rounded">
                             <label for="uppercase" class="ml-3 text-slate-300">Include Uppercase</label>
                         </div>
                         <div class="flex items-center">
-                            <input id="lowercase" name="lowercase" type="checkbox" checked class="h-5 w-5 bg-slate-700 border-slate-600 text-sky-500 focus:ring-sky-600 rounded">
+                            <input id="lowercase" name="lowercase" type="checkbox" value="1" {% if lower %}checked{% endif %} class="h-5 w-5 bg-slate-700 border-slate-600 text-sky-500 focus:ring-sky-600 rounded">
                             <label for="lowercase" class="ml-3 text-slate-300">Include Lowercase</label>
                         </div>
                         <div class="flex items-center">
-                            <input id="numbers" name="numbers" type="checkbox" checked class="h-5 w-5 bg-slate-700 border-slate-600 text-sky-500 focus:ring-sky-600 rounded">
+                            <input id="numbers" name="numbers" type="checkbox" value="1" {% if numbers %}checked{% endif %} class="h-5 w-5 bg-slate-700 border-slate-600 text-sky-500 focus:ring-sky-600 rounded">
                             <label for="numbers" class="ml-3 text-slate-300">Include Numbers</label>
                         </div>
                         <div class="flex items-center">
-                            <input id="symbols" name="symbols" type="checkbox" checked class="h-5 w-5 bg-slate-700 border-slate-600 text-sky-500 focus:ring-sky-600 rounded">
+                            <input id="symbols" name="symbols" type="checkbox" value="1" {% if symbols %}checked{% endif %} class="h-5 w-5 bg-slate-700 border-slate-600 text-sky-500 focus:ring-sky-600 rounded">
                             <label for="symbols" class="ml-3 text-slate-300">Include Symbols</label>
                         </div>
                     </div>
@@ -86,13 +100,30 @@
                 <button type="submit" class="mt-6 w-full bg-sky-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 focus:ring-sky-500 transition-all duration-300 transform hover:scale-105">
                     Generate Password
                 </button>
+                <script>
+                    document.getElementById('passwordGenerateForm').addEventListener('submit', function (e) {
+                        const checkboxes = ['uppercase', 'lowercase', 'numbers', 'symbols'];
+                        const oneChecked = checkboxes.some(id => document.getElementById(id).checked);
+
+                        if (!oneChecked) {
+                            e.preventDefault(); // Stop form from submitting
+                            alert('Please select at least one character type (uppercase, lowercase, numbers, or symbols).');
+                        }
+                    });
+                </script>
             </form>
 
             <!-- Password Strength Checker Section -->
             <form method="POST" action="/check-strength" class="bg-slate-800 p-6 rounded-2xl shadow-lg">
                 <h2 class="text-xl font-semibold text-white mb-4">Password Strength Checker</h2>
                 
-                <input id="password-to-check" name="password_to_check" type="text" value="{{ password_to_check or '' }}" placeholder="Type a password to check its strength" class="w-full bg-slate-900 text-white placeholder-slate-500 border border-slate-700 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition">
+                <div class="relative">
+                    <input id="password-to-check" name="password_to_check" type="password" value="{{ password_to_check_strength or '' }}" placeholder="Type a password to check its strength" class="w-full bg-slate-900 text-white placeholder-slate-500 border border-slate-700 rounded-lg p-3 pr-10 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition">
+                    <button type="button" id="toggle-strength-visibility" class="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-slate-200">
+                        <svg id="eye-strength-open" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        <svg id="eye-strength-closed" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path><line x1="2" x2="22" y1="2" y2="22"></line></svg>
+                    </button>
+                </div>
 
                 <div class="mt-4">
                     <div class="w-full bg-slate-700 rounded-full h-2.5">
@@ -107,12 +138,16 @@
             
             <!-- Common Password / Breach Check Section -->
             <form method="POST" action="/check-breach" class="bg-slate-800 p-6 rounded-2xl shadow-lg">
-                <h2 class="text-xl font-semibold text-white mb-4">Common Password Check</h2>
+                <h2 class="text-xl font-semibold text-white mb-4">Password Breach Check</h2>
                 
-                <!-- Using type="password" is better for privacy -->
-                <input id="password-to-check-breach" name="password_to_check_breach" type="password" placeholder="Enter password to check for breaches" class="w-full bg-slate-900 text-white placeholder-slate-500 border border-slate-700 rounded-lg p-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition">
+                <div class="relative">
+                    <input id="password-to-check-breach" name="password_to_check_breach" type="password" value="{{ password_breach_check or '' }}" placeholder="Enter password to check for breaches" class="w-full bg-slate-900 text-white placeholder-slate-500 border border-slate-700 rounded-lg p-3 pr-10 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition">
+                    <button type="button" id="toggle-breach-visibility" class="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-slate-200">
+                        <svg id="eye-breach-open" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        <svg id="eye-breach-closed" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path><line x1="2" x2="22" y1="2" y2="22"></line></svg>
+                    </button>
+                </div>
 
-                <!-- Result from your Flask backend will be displayed here -->
                 <div class="mt-4 text-center h-12 flex items-center justify-center">
                     {% if breach_feedback %}
                         <p class="font-medium {{ breach_feedback_color or 'text-slate-400' }}">{{ breach_feedback | safe }}</p>
@@ -125,77 +160,31 @@
             </form>
         </main>
         
-        <!-- Floating Notification for Copy Action -->
-        <div id="toast" class="hidden fixed bottom-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-xl">
-            Copied to clipboard!
-        </div>
     </div>
-
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // --- Element References ---
-            const lengthSlider = document.getElementById('length');
-            const lengthValue = document.getElementById('length-value');
-            const copyButton = document.getElementById('copy-button');
-            const passwordGenerateForm = document.getElementById('passwordGenerateForm');
-            const toast = document.getElementById('toast');
-
-            // --- Event Listeners ---
-
-            // Update password length display
-            if (lengthSlider) {
-                lengthSlider.addEventListener('input', function() {
-                    if (lengthValue) {
-                        lengthValue.textContent = this.value;
-                    }
-                });
+        // Toggle password visibility
+        function togglePasswordVisibility(inputId, openIconId, closedIconId) {
+            const input = document.getElementById(inputId);
+            const eyeOpen = document.getElementById(openIconId);
+            const eyeClosed = document.getElementById(closedIconId);
+            if (input.type === "password") {
+                input.type = "text";
+                eyeOpen.classList.remove('hidden');
+                eyeClosed.classList.add('hidden');
+            } else {
+                input.type = "password";
+                eyeOpen.classList.add('hidden');
+                eyeClosed.classList.remove('hidden');
             }
+        }
 
-            // Copy to clipboard functionality
-            if (copyButton) {
-                copyButton.addEventListener('click', () => {
-                    const passwordField = document.getElementById('generated-password');
-                    const password = passwordField.value;
+        document.getElementById('toggle-strength-visibility').addEventListener('click', function() {
+            togglePasswordVisibility('password-to-check', 'eye-strength-open', 'eye-strength-closed');
+        });
 
-                    if (!password) return;
-
-                    // Use the Clipboard API for modern browsers
-                    navigator.clipboard.writeText(password).then(() => {
-                        showToast();
-                    }).catch(err => {
-                        console.error('Could not copy text: ', err);
-                    });
-                });
-            }
-
-            // Form validation: ensure at least one character type is selected
-            if (passwordGenerateForm) {
-                passwordGenerateForm.addEventListener('submit', function (e) {
-                    const checkboxes = ['uppercase', 'lowercase', 'numbers', 'symbols'];
-                    const isAnyChecked = checkboxes.some(id => document.getElementById(id) && document.getElementById(id).checked);
-
-                    if (!isAnyChecked) {
-                        e.preventDefault(); // Stop form submission
-                        // A non-blocking notification is better than alert()
-                        alert('Please select at least one character type.');
-                    }
-                });
-            }
-
-            // --- Helper Functions ---
-
-            // Show a "Copied!" toast notification
-            function showToast() {
-                if (!toast) return;
-                toast.classList.remove('hidden');
-                toast.classList.add('toast-notification');
-                setTimeout(() => {
-                    toast.classList.add('hidden');
-                    toast.classList.remove('toast-notification');
-                }, 3000);
-            }
+        document.getElementById('toggle-breach-visibility').addEventListener('click', function() {
+            togglePasswordVisibility('password-to-check-breach', 'eye-breach-open', 'eye-breach-closed');
         });
     </script>
-
 </body>
 </html>

@@ -4,6 +4,7 @@ import secrets
 import requests
 import hashlib
 import string
+import os
 
 def generate_random_password(length, upper, lower, numbers, symbols):
     valid_characters = ""
@@ -24,12 +25,10 @@ def generate_random_password(length, upper, lower, numbers, symbols):
 
 def check_online(password):
     try:
-        times_seen = 0
 
         hash_string = hashlib.sha1(password.encode()).hexdigest()
-        
         prefix = hash_string[0:5]
-        suffix = hash_string[5:0]
+        suffix = hash_string[5:].upper()
         req = requests.get(f'https://api.pwnedpasswords.com/range/{prefix}')
         
         hashes = (line.split(":") for line in req.text.splitlines())
@@ -47,64 +46,60 @@ def index():
 
 @application.route("/generate-password", methods=["GET", "POST"])
 def generate_password():
-    
-    
     if request.method == "POST":
-        length = int(request.form.get("length", 16)) # 16 is default if no value is provided
+        length = int(request.form.get("length", 16))
         upper = "uppercase" in request.form
         lower = "lowercase" in request.form
         numbers = "numbers" in request.form
         symbols = "symbols" in request.form
-        
+
         try:
             password = generate_random_password(length, upper, lower, numbers, symbols)
-            return render_template("index.html", generated_password=password)
-
+            return render_template(
+                "index.html",
+                generated_password=password,
+                length=length,
+                upper=upper,
+                lower=lower,
+                numbers=numbers,
+                symbols=symbols
+            )
         except IndexError:
-            return render_template("index.html")
-    else:
-        return redirect("/")
+            return render_template("index.html", error="Please select at least one character set.")
+
+    return redirect("/")
+
 
 @application.route("/check-strength", methods=["GET", "POST"])
 def check_strength():
-    
     if request.method == "POST":
-        password = request.form.get("password_to_check")
+        password = request.form.get("password_to_check", "")
         strength = 0
         strength_feedback = "Please enter a password above"
-        
-        upper, lower, numbers, symbols = False, False, False, False
-        
-        if password:
-            for char in password:
-                if char.isupper():
-                    upper = True
-                if char.islower():
-                    lower = True
-                if char in string.punctuation:
-                    symbols = True
-                if char in string.digits:
-                    numbers = True
-            
-            if upper:
-                strength += .15
-            if lower: 
-                strength += .15
-            if numbers:
-                strength += .15
-            if symbols:
-                strength += .15
-            
-            print(strength)
-            
-            length_modifier = (len(password) / 12) * .5 # 12 is max password length strength modifier
-            
+        color = "bg-blue-500"  # default fallback color
+
+        if password.strip():  # check for non-empty password
+            upper = any(c.isupper() for c in password)
+            lower = any(c.islower() for c in password)
+            numbers = any(c.isdigit() for c in password)
+            symbols = any(c in string.punctuation for c in password)
+
+            # Base score contributions
+            if upper: strength += 0.15
+            if lower: strength += 0.15
+            if numbers: strength += 0.15
+            if symbols: strength += 0.15
+
+            # Length modifier
+            length_modifier = min((len(password) / 12) * 0.5, 0.5)
             if len(password) < 6:
-                strength = .25
-                strength_feedback = "weak"
+                strength = 0.25
+                strength_feedback = "Weak"
+                color = "bg-red-500"
             else:
                 strength += length_modifier
-                
+
+                # Assign feedback and color based on strength
                 if strength <= 0.3:
                     strength_feedback = "Weak"
                     color = "bg-red-500"
@@ -114,32 +109,57 @@ def check_strength():
                 elif strength <= 0.75:
                     strength_feedback = "Strong"
                     color = "bg-green-500"
-                elif strength > 1:
+                else:
                     strength = 1
                     strength_feedback = "Very Strong"
                     color = "bg-emerald-500"
-    
-        return render_template("index.html", password=password, strength_bar_value=strength * 100, strength_bar_color=color, strength_feedback=strength_feedback)
-    
-    else:
-        return redirect("/")
-    
+
+            # Check against common password list
+            with open(os.path.realpath('pypass/app/10k-most-common.txt')) as f:
+                for line in f:
+                    pw = line.strip()
+                    variants = {pw, pw.lower(), pw.upper(), pw.capitalize()}
+                    if password in variants:
+                        strength = 1
+                        strength_feedback = "Weak - Common password!"
+                        color = "bg-red-500"
+                        break  # Stop checking after match
+
+        else:
+            strength = 0
+            strength_feedback = "Enter a password please!"
+            color = "bg-blue-500"
+
+        return render_template(
+            "index.html",
+            password_to_check_strength=password,
+            strength_bar_value=int(strength * 100),
+            strength_bar_color=color,
+            strength_feedback=strength_feedback
+        )
+
+    return redirect("/")
+
+        
 @application.route("/check-breach", methods=["GET", "POST"])
 def check_breach():
     
     if request.method == "POST":
         password = request.form.get("password_to_check_breach")
-        occurances = check_online(password)
         
-        if not occurances.is_integer():
-            breach_feedback = "Error!"
-        else:
-            if occurances > 1:
-                breach_feedback = f"Oh no... That password has been found and cracked in approximately {occurances} data breaches!"
+        if password != "": 
+            occurances = check_online(password)
+        
+            if not occurances.is_integer():
+                breach_feedback = "Error!"
             else:
-                breach_feedback = "Phew... This password has not been found in most common breaches"
-    
-        return render_template("index.html", breach_feedback=breach_feedback)
-    
+                if occurances > 1:
+                    breach_feedback = f"Oh no... That password has been found and cracked in approximately {occurances} data breaches!"
+                else:
+                    breach_feedback = "Phew... This password has not been found in most common breaches"
+        
+            return render_template("index.html", breach_feedback=breach_feedback, password_breach_check=password)
+        else:
+            return render_template("index.html", breach_feedback="Please enter a password!", password_breach_check=password)
     else:
         return redirect("/")    
