@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 """
 Program: pypass.py
 Developer: CyberPanther232
@@ -11,4 +13,4 @@ Purpose:
 from app import application, routes
 
 if __name__ == "__main__":
-    application.run(debug=True)
+    application.run(debug=True, host="0.0.0.0", port=5000)
