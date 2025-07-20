@@ -123,17 +123,18 @@
                 <h2 class="text-xl font-semibold text-white mb-4">Password Strength Checker</h2>
                 
                 <!-- Password Input -->
-                <input id="password-to-check" name="password_to_check" type="text" placeholder="Type a password and submit to check" class="w-full bg-slate-900 text-white placeholder-slate-500 border border-slate-700 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition">
+                <input id="password-to-check" name="password_to_check" type="text" value="{{ password or "Enter password here" }}" placeholder="Type a password and submit to check" class="w-full bg-slate-900 text-white placeholder-slate-500 border border-slate-700 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition">
 
                 <!-- Strength Bar and Feedback -->
                 <div class="mt-4">
                     <div class="w-full bg-slate-700 rounded-full h-2.5">
                         <!-- Your Flask app would pass data to set the width and color here -->
                         <!-- Example: style="width: {{ strength_percent }}%;" class="... {{ strength_color_class }}" -->
-                        <div id="strength-bar" class="h-2.5 rounded-full strength-bar-transition bg-sky-500" style="width: 0%"></div>
+                        <div id="strength-bar" class="h-2.5 rounded-full strength-bar-transition {{ strength_bar_color }}" style="width: {{ strength_bar_value or 0 }}%"></div>
+
                     </div>
                      <!-- Your Flask app would pass the feedback text here -->
-                    <p id="strength-feedback" class="text-right text-sm mt-2 font-medium text-slate-400">{{ strength_feedback or 'Please enter password above' }}</p>
+                    <p id="strength_feedback" class="text-right text-sm mt-2 font-medium text-slate-400">{{ strength_feedback or 'Please enter password above' }}</p>
                 </div>
                  <button type="submit" class="mt-6 w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 focus:ring-indigo-500 transition-all">
                     Check Strength
@@ -142,8 +143,6 @@
         </main>
         
     </div>
-
-    <!-- No JavaScript logic included. Ready for your Python backend! -->
 
 </body>
 </html>
