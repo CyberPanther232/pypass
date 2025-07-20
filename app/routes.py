@@ -115,7 +115,7 @@ def check_strength():
                     color = "bg-emerald-500"
 
             # Check against common password list
-            with open(os.path.realpath('pypass/app/10k-most-common.txt')) as f:
+            with open(os.path.normpath('app/10k-most-common.txt')) as f:
                 for line in f:
                     pw = line.strip()
                     variants = {pw, pw.lower(), pw.upper(), pw.capitalize()}
