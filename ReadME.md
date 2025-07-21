@@ -2,8 +2,6 @@
 
 # PyPass - Password Toolkit
 
-![PyPass Cyber Panther Logo](https://storage.googleapis.com/gemini-prod-us-west1-433524352522-public/images/84043b81-c71c-429a-9e12-87068551a37c)
-
 **Generate, check strength, and verify the security of your passwords with this all-in-one password utility built with Python and Flask.**
 
 PyPass is a simple yet powerful web application designed to help you manage your password security effectively. It provides a clean, modern, and user-friendly interface for all your password-related needs.
